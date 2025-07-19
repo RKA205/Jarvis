@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>BitSumit JARVIS</title>
+  <style>
+    body {
+      background: #000;
+      color: #00ffcc;
+      font-family: monospace;
+      text-align: center;
+      padding: 50px;
+    }
+    button {
+      padding: 20px 40px;
+      font-size: 18px;
+      border: none;
+      border-radius: 8px;
+      background: #00ffcc;
+      color: black;
+      cursor: pointer;
+      margin-top: 30px;
+    }
+    h1 {
+      font-size: 32px;
+      margin-bottom: 30px;
+    }
+    #response {
+      margin-top: 30px;
+      font-size: 20px;
+      color: #fff;
+    }
+  </style>
+</head>
+<body>
+  <h1>🎙 BitSumit JARVIS v1.0</h1>
+  <button onclick="startListening()">🎧 Listen</button>
+  <div id="response">Waiting for your command...</div>
+
+  <script>
+    const responseBox = document.getElementById("response");
+
+    const speak = (message) => {
+      const utter = new SpeechSynthesisUtterance(message);
+      utter.rate = 1;
+      utter.pitch = 1;
+      utter.lang = "en-US";
+      speechSynthesis.speak(utter);
+    };
+
+    const startListening = () => {
+      if (!('webkitSpeechRecognition' in window)) {
+        alert("Your browser does not support Speech Recognition.");
+        return;
+      }
+
+      const recognition = new webkitSpeechRecognition();
+      recognition.lang = "en-US";
+      recognition.interimResults = false;
+      recognition.maxAlternatives = 1;
+
+      recognition.start();
+
+      recognition.onstart = () => {
+        responseBox.innerText = "🎧 Listening...";
+      };
+
+      recognition.onresult = (event) => {
+        const command = event.results[0][0].transcript.toLowerCase();
+        responseBox.innerText = `You said: "${command}"`;
+        processCommand(command);
+      };
+
+      recognition.onerror = (event) => {
+        responseBox.innerText = "❌ Error: " + event.error;
+        speak("Sorry, I didn't catch that.");
+      };
+    };
+
+    const processCommand = (cmd) => {
+      if (cmd.includes("hello")) {
+        speak("Hello Sumit. How can I assist you?");
+      } else if (cmd.includes("open youtube")) {
+        speak("Opening YouTube.");
+        window.open("https://youtube.com", "_blank");
+      } else if (cmd.includes("time")) {
+        const time = new Date().toLocaleTimeString();
+        speak("Current time is " + time);
+      } else if (cmd.includes("who are you")) {
+        speak("I am BitSumit's AI assistant. People call me Jarvis.");
+      } else {
+        speak("Sorry, I don't understand that.");
+      }
+    };
+  </script>
+</body>
+</html>
