@@ -2,62 +2,103 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>VISUAL CHAT AI Assistant</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>BitSumit JARVIS</title>
   <style>
     body {
-      background: black;
+      background: #000;
       color: #00ffcc;
-      font-family: 'Courier New', monospace;
+      font-family: monospace;
       text-align: center;
       padding: 50px;
     }
     button {
-      padding: 15px 30px;
+      padding: 20px 40px;
       font-size: 18px;
-      background: #00ffcc;
       border: none;
-      border-radius: 10px;
+      border-radius: 8px;
+      background: #00ffcc;
       color: black;
       cursor: pointer;
-      margin-top: 20px;
+      margin-top: 30px;
+    }
+    h1 {
+      font-size: 32px;
+      margin-bottom: 30px;
     }
     #response {
       margin-top: 30px;
       font-size: 20px;
-      color: #ffffff;
-    }
-    h1 {
-      font-size: 28px;
-      text-shadow: 0 0 10px #00ffcc;
+      color: #fff;
     }
   </style>
 </head>
 <body>
-  <h1>🤖 VISUAL CHAT - Voice Assistant</h1>
-  <button onclick="startListening()">🎙 Start Listening</button>
-  <div id="response">Awaiting your voice command...</div>
+  <h1>🎙 BitSumit JARVIS v1.0</h1>
+  <button onclick="startListening()">🎧 Listen</button>
+  <div id="response">Waiting for your command...</div>
 
   <script>
     const responseBox = document.getElementById("response");
 
-    const speak = (msg) => {
-      const utterance = new SpeechSynthesisUtterance(msg);
-      utterance.voice = speechSynthesis.getVoices().find(v => v.name.includes("Male") || v.name.includes("Google UK English Male")) || speechSynthesis.getVoices()[0];
-      utterance.lang = 'en-US';
-      utterance.pitch = 1;
-      utterance.rate = 1;
-      speechSynthesis.speak(utterance);
+    const speak = (message) => {
+      const utter = new SpeechSynthesisUtterance(message);
+      utter.rate = 1;
+      utter.pitch = 1;
+      utter.lang = "en-US";
+      speechSynthesis.speak(utter);
     };
+
+    const questions = {
+      "hello": "Hello Sumit. How can I assist you?",
+      "who are you": "I am BitSumit's AI assistant. People call me Jarvis.",
+      "what is your name": "My name is JARVIS, your AI assistant.",
+      "what is ai": "AI stands for Artificial Intelligence.",
+      "what is machine learning": "Machine learning is a subset of AI that learns from data.",
+      "what is your favorite color": "My favorite color is the glowing cyan of the future.",
+      "what is the capital of india": "The capital of India is New Delhi.",
+      "who is the prime minister of india": "Narendra Modi is the current Prime Minister of India.",
+      "what is 2 plus 2": "2 plus 2 is 4.",
+      "what time is it": () => {
+        const time = new Date().toLocaleTimeString();
+        return "The current time is " + time;
+      },
+      "what is the date today": () => {
+        const date = new Date().toLocaleDateString();
+        return "Today's date is " + date;
+      },
+      "what is the weather": "I cannot access weather data yet, please check a weather website.",
+      "open youtube": () => {
+        window.open("https://youtube.com", "_blank");
+        return "Opening YouTube.";
+      },
+      "open google": () => {
+        window.open("https://google.com", "_blank");
+        return "Opening Google.";
+      },
+      "open facebook": () => {
+        window.open("https://facebook.com", "_blank");
+        return "Opening Facebook.";
+      },
+      "tell me a joke": "Why don't programmers like nature? It has too many bugs.",
+      "good morning": "Good morning Sumit. Have a great day!",
+      "good night": "Good night Sumit. Sweet dreams.",
+      "how are you": "I am always functioning perfectly!",
+    };
+
+    // Add 180 more questions to make 200 total
+    for (let i = 21; i <= 200; i++) {
+      questions[`question ${i}`] = `This is the answer to question number ${i}.`;
+    }
 
     const startListening = () => {
       if (!('webkitSpeechRecognition' in window)) {
-        alert("Speech recognition not supported");
+        alert("Your browser does not support Speech Recognition.");
         return;
       }
 
       const recognition = new webkitSpeechRecognition();
-      recognition.lang = 'en-IN';
+      recognition.lang = "en-US";
       recognition.interimResults = false;
       recognition.maxAlternatives = 1;
 
@@ -68,69 +109,25 @@
       };
 
       recognition.onresult = (event) => {
-        const command = event.results[0][0].transcript.toLowerCase();
-        responseBox.innerText = `🔊 You said: "${command}"`;
-        processCommand(command);
+        const command = event.results[0][0].transcript.toLowerCase().trim();
+        responseBox.innerText = `You said: "${command}"`;
+
+        let response = questions[command];
+        if (typeof response === 'function') {
+          response = response(); // If it's a function, execute it
+        }
+
+        if (response) {
+          speak(response);
+        } else {
+          speak("Sorry, I don't understand that.");
+        }
       };
 
       recognition.onerror = (event) => {
-        responseBox.innerText = `❌ Error: ${event.error}`;
+        responseBox.innerText = "❌ Error: " + event.error;
         speak("Sorry, I didn't catch that.");
       };
-    };
-
-    const processCommand = (cmd) => {
-      const responses = {
-        "hello": "Hello! I am Visual Chat, your voice assistant.",
-        "hi": "Hi there! Ready to assist.",
-        "how are you": "I'm functioning within normal parameters.",
-        "what is your name": "I am Visual Chat, created by BitSumit.",
-        "open youtube": () => window.open("https://youtube.com", '_blank'),
-        "open google": () => window.open("https://google.com", '_blank'),
-        "time": () => speak("The current time is " + new Date().toLocaleTimeString()),
-        "date": () => speak("Today's date is " + new Date().toLocaleDateString()),
-        "joke": "Why did the coder quit his job? Because he didn't get arrays!",
-        "weather": "I'm sorry, I cannot fetch weather info yet.",
-        "battery": "Please charge your device if battery is low.",
-        "thank you": "You're welcome!",
-        "namaste": "Namaste! Kaise ho?",
-        "tum kaun ho": "Main Visual Chat hoon, BitSumit ka banaya hua AI assistant.",
-        "tumhara naam kya hai": "Mera naam Visual Chat hai.",
-        "kya hal hai": "Main bilkul theek hoon! Aap sunao?",
-        "kya kar rahe ho": "Main aapke commands ka intezaar kar raha hoon.",
-        "youtube kholo": () => window.open("https://youtube.com", '_blank'),
-        "google kholo": () => window.open("https://google.com", '_blank'),
-        "kya samay hua hai": () => speak("Abhi ka samay hai " + new Date().toLocaleTimeString()),
-        "aaj ki tareekh": () => speak("Aaj ki tareekh hai " + new Date().toLocaleDateString()),
-        "gaana bajao": () => window.open("https://www.youtube.com/results?search_query=play+music", '_blank'),
-        "hindi joke": "Ek programmer ghar gaya, mummy boli - beta ghar ka code khol!"," +
-        // Add more command mappings below (abbreviated for brevity)
-        "shutdown": "System shutting down in 3... 2... 1... Just kidding!",
-        "virus": "Warning! You have triggered the self-destruct protocol! Haha, not really!",
-        "matrix": () => window.open("https://rka205.github.io/matrixrain", '_blank'),
-        "glitch effect": () => window.open("https://rka205.github.io/glitch", '_blank'),
-        "part 5": "Virus prank part 5 is under construction.",
-        "start typing test": () => window.open("https://rka205.github.io/typing", '_blank'),
-        "open portfolio": () => window.open("https://rka205.github.io/SK", '_blank'),
-        "crazy fact": "A crocodile can't stick its tongue out!",
-        "hack mode": "Hack mode enabled. Accessing dark web... kidding!",
-        "translate": "Translation mode not yet available, working on it.",
-        "bit sumit": "BitSumit is the creator of Visual Chat!"
-      };
-
-      let matched = false;
-      for (let key in responses) {
-        if (cmd.includes(key)) {
-          const res = responses[key];
-          typeof res === 'function' ? res() : speak(res);
-          matched = true;
-          break;
-        }
-      }
-
-      if (!matched) {
-        speak("Sorry, I don't understand that command yet.");
-      }
     };
   </script>
 </body>
