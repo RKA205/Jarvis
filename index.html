@@ -2,51 +2,171 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>BitSumit JARVIS</title>
   <style>
     body {
       background: #000;
       color: #00ffcc;
-      font-family: monospace;
+      font-family: 'Courier New', monospace;
+      margin: 0;
+      padding: 20px;
       text-align: center;
-      padding: 50px;
     }
+
+    h1 {
+      font-size: 36px;
+      margin-bottom: 10px;
+      color: #00fff7;
+      text-shadow: 0 0 8px #00fff7;
+    }
+
     button {
-      padding: 20px 40px;
+      padding: 15px 30px;
       font-size: 18px;
       border: none;
       border-radius: 8px;
       background: #00ffcc;
-      color: black;
+      color: #000;
       cursor: pointer;
-      margin-top: 30px;
+      margin: 20px 0;
+      transition: background 0.3s ease;
     }
-    h1 {
-      font-size: 32px;
-      margin-bottom: 30px;
+
+    button:hover {
+      background: #00e6b3;
     }
+
+    #ai-face {
+      width: 180px;
+      height: 180px;
+      background: radial-gradient(circle at center, #00ffcc 0%, #003333 80%);
+      border-radius: 50%;
+      margin: 20px auto;
+      position: relative;
+      animation: pulse 2s infinite;
+      box-shadow: 0 0 30px #00ffcc;
+    }
+
+    #ai-face::before, #ai-face::after {
+      content: "";
+      position: absolute;
+      background: #000;
+      border-radius: 50%;
+    }
+
+    #ai-face::before {
+      width: 24px;
+      height: 24px;
+      left: 40px;
+      top: 50px;
+    }
+
+    #ai-face::after {
+      width: 24px;
+      height: 24px;
+      right: 40px;
+      top: 50px;
+    }
+
+    #mouth {
+      width: 60px;
+      height: 15px;
+      background: #000;
+      border-radius: 50%;
+      position: absolute;
+      left: 50%;
+      bottom: 40px;
+      transform: translateX(-50%);
+      animation: talk 0s infinite alternate;
+    }
+
+    @keyframes pulse {
+      0% { box-shadow: 0 0 10px #00ffcc; }
+      50% { box-shadow: 0 0 30px #00ffcc; }
+      100% { box-shadow: 0 0 10px #00ffcc; }
+    }
+
+    @keyframes talk {
+      0% { height: 15px; }
+      50% { height: 40px; }
+      100% { height: 15px; }
+    }
+
+    #chat-history {
+      max-width: 700px;
+      margin: 20px auto;
+      text-align: left;
+      background: #111;
+      padding: 20px;
+      border-radius: 10px;
+      overflow-y: auto;
+      max-height: 300px;
+      box-shadow: 0 0 10px #00ffcc;
+    }
+
+    .user {
+      color: #00faff;
+      margin-top: 10px;
+    }
+
+    .jarvis {
+      color: #00ff88;
+      margin-bottom: 10px;
+    }
+
     #response {
-      margin-top: 30px;
-      font-size: 20px;
-      color: #fff;
+      font-size: 18px;
+      margin-top: 20px;
+      color: #00ffff;
+      text-shadow: 0 0 5px #00ffff;
     }
   </style>
 </head>
 <body>
   <h1>🎙 BitSumit JARVIS v1.0</h1>
+
+  <div id="ai-face">
+    <div id="mouth"></div>
+  </div>
+
   <button onclick="startListening()">🎧 Listen</button>
   <div id="response">Waiting for your command...</div>
+  <div id="chat-history"></div>
 
   <script>
     const responseBox = document.getElementById("response");
+    const chatHistory = document.getElementById("chat-history");
+    const mouth = document.getElementById("mouth");
 
     const speak = (message) => {
       const utter = new SpeechSynthesisUtterance(message);
       utter.rate = 1;
       utter.pitch = 1;
       utter.lang = "en-US";
+
+      utter.onstart = () => mouth.style.animation = "talk 0.3s infinite alternate";
+      utter.onend = () => mouth.style.animation = "none";
+
       speechSynthesis.speak(utter);
+    };
+
+    const typeEffect = (text, element) => {
+      element.innerText = "";
+      let i = 0;
+      const typing = setInterval(() => {
+        element.innerText += text.charAt(i);
+        i++;
+        if (i >= text.length) clearInterval(typing);
+      }, 30);
+    };
+
+    const addToChat = (role, text) => {
+      const div = document.createElement("div");
+      div.className = role;
+      div.innerText = `${role === 'user' ? '🧑‍🚀 You' : '🤖 Jarvis'}: ${text}`;
+      chatHistory.appendChild(div);
+      chatHistory.scrollTop = chatHistory.scrollHeight;
     };
 
     const questions = {
@@ -67,7 +187,6 @@
         const date = new Date().toLocaleDateString();
         return "Today's date is " + date;
       },
-      "what is the weather": "I cannot access weather data yet, please check a weather website.",
       "open youtube": () => {
         window.open("https://youtube.com", "_blank");
         return "Opening YouTube.";
@@ -83,10 +202,10 @@
       "tell me a joke": "Why don't programmers like nature? It has too many bugs.",
       "good morning": "Good morning Sumit. Have a great day!",
       "good night": "Good night Sumit. Sweet dreams.",
-      "how are you": "I am always functioning perfectly!",
+      "how are you": "I am always functioning perfectly!"
     };
 
-    // Add 180 more questions to make 200 total
+    // Add more questions dynamically
     for (let i = 21; i <= 200; i++) {
       questions[`question ${i}`] = `This is the answer to question number ${i}.`;
     }
@@ -103,24 +222,27 @@
       recognition.maxAlternatives = 1;
 
       recognition.start();
-
-      recognition.onstart = () => {
-        responseBox.innerText = "🎧 Listening...";
-      };
+      responseBox.innerText = "🎧 Listening...";
 
       recognition.onresult = (event) => {
         const command = event.results[0][0].transcript.toLowerCase().trim();
         responseBox.innerText = `You said: "${command}"`;
+        addToChat("user", command);
 
         let response = questions[command];
         if (typeof response === 'function') {
-          response = response(); // If it's a function, execute it
+          response = response();
         }
 
         if (response) {
+          typeEffect(response, responseBox);
+          addToChat("jarvis", response);
           speak(response);
         } else {
-          speak("Sorry, I don't understand that.");
+          const msg = "Sorry, I don't understand that.";
+          typeEffect(msg, responseBox);
+          addToChat("jarvis", msg);
+          speak(msg);
         }
       };
 
